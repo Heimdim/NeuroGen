@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../history/screen/generation_history_screen.dart';
 import '../cubit/generation_cubit.dart';
 import '../cubit/generation_state.dart';
 import '../widgets/generate_button.dart';
@@ -48,6 +49,14 @@ class _GenerationScreenState extends State<GenerationScreen> {
     });
   }
 
+  void _openHistory() {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => const GenerationHistoryScreen(),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _promptController.dispose();
@@ -59,7 +68,11 @@ class _GenerationScreenState extends State<GenerationScreen> {
     return BlocProvider(
       create: (_) => getIt<GenerationCubit>(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('AI Image Generation')),
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          scrolledUnderElevation: 0,
+          title: const _NeuroGenBrandTitle(),
+        ),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -91,27 +104,40 @@ class _GenerationScreenState extends State<GenerationScreen> {
                         ),
                         const SizedBox(height: 12),
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            OutlinedButton(
-                              onPressed:
-                                  isLoading ? null : _pickImageFromGallery,
-                              child: Text(
-                                _selectedImagePath == null
-                                    ? 'Select Image from Gallery'
-                                    : 'Image Selected',
+                            Expanded(
+                              child: _LavenderToolbarButton(
+                                onPressed: isLoading
+                                    ? null
+                                    : _pickImageFromGallery,
+                                icon: Icons.add_a_photo_outlined,
+                                label: _selectedImagePath == null
+                                    ? 'Add a photo'
+                                    : 'Replace photo',
                               ),
                             ),
-                            if (_selectedImagePreviewBytes != null) ...[
-                              const SizedBox(width: 8),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _LavenderToolbarButton(
+                                onPressed: isLoading ? null : _openHistory,
+                                icon: Icons.history,
+                                label: 'History',
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_selectedImagePreviewBytes != null) ...[
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
                               _SelectedImagePreview(
                                 bytes: _selectedImagePreviewBytes!,
                                 onClear: _clearSelectedImage,
                                 clearEnabled: !isLoading,
                               ),
                             ],
-                          ],
-                        ),
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         GenerateButton(
                           isLoading: isLoading,
@@ -188,6 +214,91 @@ class _GenerationScreenState extends State<GenerationScreen> {
                 );
               },
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NeuroGenBrandTitle extends StatelessWidget {
+  const _NeuroGenBrandTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    const TextStyle base = TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.2,
+    );
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('NeuroGen', style: base.copyWith(color: Colors.black87)),
+        const SizedBox(width: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF7C4DFF), Color(0xFF536DFE)],
+            ),
+          ),
+          child: const Text(
+            'AI',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+            ),
+          ),
+        ),
+        Text(' Pro', style: base.copyWith(color: const Color(0xFF1976D2))),
+      ],
+    );
+  }
+}
+
+class _LavenderToolbarButton extends StatelessWidget {
+  const _LavenderToolbarButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+  });
+
+  final VoidCallback? onPressed;
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFEDE7F5),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: const Color(0xFF5E35B1)),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: Color(0xFF424242),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
