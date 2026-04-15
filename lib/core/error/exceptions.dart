@@ -1,3 +1,9 @@
+class ConfigurationException implements Exception {
+  ConfigurationException(this.message);
+
+  final String message;
+}
+
 class ServerException implements Exception {
   ServerException(this.message);
 

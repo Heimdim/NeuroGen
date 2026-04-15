@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 
+import 'package:neurogen/core/config/kling_api_config.dart';
+import 'package:neurogen/core/config/kling_api_secrets.dart';
 import 'package:neurogen/core/di/service_locator.dart';
 import 'package:neurogen/main.dart';
 
@@ -9,7 +11,12 @@ void main() {
 
   setUp(() async {
     await sl.reset();
-    setupServiceLocator();
+    setupServiceLocator(
+      klingApiConfig: KlingApiConfig(
+        baseUrl: 'https://example.com',
+        secrets: KlingApiSecrets.bearerForTests('test-token'),
+      ),
+    );
   });
 
   tearDown(() async {
