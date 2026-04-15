@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import 'kling_auth_interceptor.dart';
+
 class DioClient {
   DioClient({
     required String baseUrl,
@@ -14,6 +16,11 @@ class DioClient {
            responseType: ResponseType.json,
          ),
        ) {
+    for (final interceptor in interceptors) {
+      if (interceptor is KlingAuthInterceptor) {
+        interceptor.bindClient(dio);
+      }
+    }
     dio.interceptors.addAll(interceptors);
   }
 

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class GeneratedImageView extends StatelessWidget {
@@ -13,17 +14,23 @@ class GeneratedImageView extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: Image.network(
-        imageUrl,
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Unable to load generated image.'),
-            ),
-          );
-        },
+        width: double.infinity,
+        height: double.infinity,
+        placeholder: (context, url) => const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        errorWidget: (context, url, error) => const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Unable to load generated image.'),
+          ),
+        ),
       ),
     );
   }

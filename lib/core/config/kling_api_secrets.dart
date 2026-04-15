@@ -1,18 +1,48 @@
-import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../error/exceptions.dart';
 
-/// Loads Kling API credentials from [dotenv] (call [dotenv.load] first).
-///
-/// Supports either a static bearer token or access/secret key pair (JWT).
+String _signKlingApiJwt({
+  required String accessKey,
+  required String secretKey,
+  required int ttlSeconds,
+  required int nbfSkewSeconds,
+}) {
+  final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+  final header = <String, dynamic>{'alg': 'HS256', 'typ': 'JWT'};
+  final payload = <String, dynamic>{
+    'iss': accessKey,
+    'exp': now + ttlSeconds,
+    'nbf': now - nbfSkewSeconds,
+  };
+  final signingInput = '${_jwtSegment(header)}.${_jwtSegment(payload)}';
+  final key = utf8.encode(secretKey);
+  final sig = Hmac(sha256, key).convert(utf8.encode(signingInput)).bytes;
+  return '$signingInput.${_jwtSegmentBytes(sig)}';
+}
+
+String _jwtSegment(Map<String, dynamic> claims) =>
+    _jwtSegmentBytes(utf8.encode(jsonEncode(claims)));
+
+String _jwtSegmentBytes(List<int> bytes) =>
+    base64Url.encode(bytes).replaceAll('=', '');
+
+
 class KlingApiSecrets {
-  KlingApiSecrets._(this._authorizationHeader);
+  KlingApiSecrets._(this._authorizationHeader, {_KlingJwtTokenCache? jwtCache})
+    : _jwtCache = jwtCache;
 
   final String Function() _authorizationHeader;
+  final _KlingJwtTokenCache? _jwtCache;
 
   /// `Authorization` header value, including the `Bearer` prefix.
   String authorizationHeaderValue() => _authorizationHeader();
+
+  /// Clears the cached JWT so the next call mints a new token.
+  void invalidateKlingJwtCache() => _jwtCache?.invalidate();
 
   factory KlingApiSecrets.fromLoadedEnv() {
     String? trimmed(String key) {
@@ -30,7 +60,10 @@ class KlingApiSecrets {
         accessKey: accessKey,
         secretKey: secretKey,
       );
-      return KlingApiSecrets._(() => 'Bearer ${cache.token()}');
+      return KlingApiSecrets._(
+        () => 'Bearer ${cache.token()}',
+        jwtCache: cache,
+      );
     }
 
     throw ConfigurationException(
@@ -54,6 +87,9 @@ class _KlingJwtTokenCache {
   String? _cachedToken;
   DateTime? _cacheValidUntil;
 
+  static const int _ttlSeconds = 25 * 60;
+  static const int _nbfSkewSeconds = 10;
+
   String token() {
     final now = DateTime.now();
     if (_cachedToken != null &&
@@ -62,23 +98,18 @@ class _KlingJwtTokenCache {
       return _cachedToken!;
     }
 
-    final issuedUtc = DateTime.now().toUtc();
-    final iatSec = issuedUtc.millisecondsSinceEpoch ~/ 1000;
-    const ttlSeconds = 25 * 60;
-    final jwt = JWT(
-      <String, dynamic>{
-        'iat': iatSec,
-        'nbf': iatSec,
-        'exp': iatSec + ttlSeconds,
-      },
-      issuer: _accessKey,
-    );
-    _cachedToken = jwt.sign(
-      SecretKey(_secretKey),
-      algorithm: JWTAlgorithm.HS256,
-      noIssueAt: true,
+    _cachedToken = _signKlingApiJwt(
+      accessKey: _accessKey,
+      secretKey: _secretKey,
+      ttlSeconds: _ttlSeconds,
+      nbfSkewSeconds: _nbfSkewSeconds,
     );
     _cacheValidUntil = now.add(const Duration(minutes: 20));
     return _cachedToken!;
+  }
+
+  void invalidate() {
+    _cachedToken = null;
+    _cacheValidUntil = null;
   }
 }
