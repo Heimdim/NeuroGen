@@ -14,8 +14,6 @@ class KlingApiSecrets {
   /// `Authorization` header value, including the `Bearer` prefix.
   String authorizationHeaderValue() => _authorizationHeader();
 
-  /// Reads [KLING_BEARER_TOKEN] or [KLING_API_KEY], or
-  /// [KLING_ACCESS_KEY] + [KLING_SECRET_KEY] for JWT (HS256).
   factory KlingApiSecrets.fromLoadedEnv() {
     String? trimmed(String key) {
       final raw = dotenv.env[key]?.trim();
@@ -23,11 +21,6 @@ class KlingApiSecrets {
         return null;
       }
       return raw;
-    }
-
-    final bearer = trimmed('KLING_BEARER_TOKEN') ?? trimmed('KLING_API_KEY');
-    if (bearer != null) {
-      return KlingApiSecrets._(() => 'Bearer $bearer');
     }
 
     final accessKey = trimmed('KLING_ACCESS_KEY');
@@ -41,12 +34,10 @@ class KlingApiSecrets {
     }
 
     throw ConfigurationException(
-      'Missing Kling credentials. Set KLING_BEARER_TOKEN (or KLING_API_KEY), '
-      'or KLING_ACCESS_KEY and KLING_SECRET_KEY in assets/.env.',
+      'Missing Kling credentials. Set KLING_ACCESS_KEY and KLING_SECRET_KEY in assets/.env.',
     );
   }
 
-  /// Fixed bearer token (e.g. widget tests).
   factory KlingApiSecrets.bearerForTests(String rawToken) {
     return KlingApiSecrets._(() => 'Bearer $rawToken');
   }
@@ -71,12 +62,21 @@ class _KlingJwtTokenCache {
       return _cachedToken!;
     }
 
-    final jwt = JWT(<String, dynamic>{}, issuer: _accessKey);
+    final issuedUtc = DateTime.now().toUtc();
+    final iatSec = issuedUtc.millisecondsSinceEpoch ~/ 1000;
+    const ttlSeconds = 25 * 60;
+    final jwt = JWT(
+      <String, dynamic>{
+        'iat': iatSec,
+        'nbf': iatSec,
+        'exp': iatSec + ttlSeconds,
+      },
+      issuer: _accessKey,
+    );
     _cachedToken = jwt.sign(
       SecretKey(_secretKey),
       algorithm: JWTAlgorithm.HS256,
-      expiresIn: const Duration(minutes: 25),
-      notBefore: const Duration(seconds: -5),
+      noIssueAt: true,
     );
     _cacheValidUntil = now.add(const Duration(minutes: 20));
     return _cachedToken!;

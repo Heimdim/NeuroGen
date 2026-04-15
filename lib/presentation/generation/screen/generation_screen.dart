@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,6 +22,7 @@ class _GenerationScreenState extends State<GenerationScreen> {
   final TextEditingController _promptController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
   String? _selectedImagePath;
+  Uint8List? _selectedImagePreviewBytes;
 
   Future<void> _pickImageFromGallery() async {
     final pickedFile = await _imagePicker.pickImage(
@@ -28,8 +31,20 @@ class _GenerationScreenState extends State<GenerationScreen> {
     if (!mounted || pickedFile == null) {
       return;
     }
+    final previewBytes = await pickedFile.readAsBytes();
+    if (!mounted) {
+      return;
+    }
     setState(() {
       _selectedImagePath = pickedFile.path;
+      _selectedImagePreviewBytes = previewBytes;
+    });
+  }
+
+  void _clearSelectedImage() {
+    setState(() {
+      _selectedImagePath = null;
+      _selectedImagePreviewBytes = null;
     });
   }
 
@@ -75,13 +90,27 @@ class _GenerationScreenState extends State<GenerationScreen> {
                           onChanged: (_) => setState(() {}),
                         ),
                         const SizedBox(height: 12),
-                        OutlinedButton(
-                          onPressed: isLoading ? null : _pickImageFromGallery,
-                          child: Text(
-                            _selectedImagePath == null
-                                ? 'Select Image from Gallery'
-                                : 'Image Selected',
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            OutlinedButton(
+                              onPressed:
+                                  isLoading ? null : _pickImageFromGallery,
+                              child: Text(
+                                _selectedImagePath == null
+                                    ? 'Select Image from Gallery'
+                                    : 'Image Selected',
+                              ),
+                            ),
+                            if (_selectedImagePreviewBytes != null) ...[
+                              const SizedBox(width: 8),
+                              _SelectedImagePreview(
+                                bytes: _selectedImagePreviewBytes!,
+                                onClear: _clearSelectedImage,
+                                clearEnabled: !isLoading,
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 12),
                         GenerateButton(
@@ -162,6 +191,56 @@ class _GenerationScreenState extends State<GenerationScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SelectedImagePreview extends StatelessWidget {
+  const _SelectedImagePreview({
+    required this.bytes,
+    required this.onClear,
+    required this.clearEnabled,
+  });
+
+  final Uint8List bytes;
+  final VoidCallback onClear;
+  final bool clearEnabled;
+
+  static const double _thumbSize = 40;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: ColoredBox(
+            color: scheme.surfaceContainerHighest,
+            child: Image.memory(
+              bytes,
+              width: _thumbSize,
+              height: _thumbSize,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+            ),
+          ),
+        ),
+        IconButton(
+          onPressed: clearEnabled ? onClear : null,
+          icon: const Icon(Icons.close),
+          tooltip: 'Clear selected image',
+          visualDensity: VisualDensity.compact,
+          style: IconButton.styleFrom(
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(32, 32),
+            foregroundColor: scheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }
