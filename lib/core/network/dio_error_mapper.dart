@@ -1,28 +1,24 @@
 import 'package:dio/dio.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../error/exceptions.dart';
 
-/// Maps [DioException] to app-level exceptions with user-facing messages.
 class DioErrorMapper {
   const DioErrorMapper._();
 
-  static Never throwMapped(DioException error) {
+  static Never throwMapped(DioException error, AppLocalizations l10n) {
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout) {
-      throw NetworkException(
-        'The request took too long. Check your connection and try again.',
-      );
+      throw NetworkException(l10n.errorRequestTimeout);
     }
 
     if (error.type == DioExceptionType.connectionError) {
-      throw NetworkException(
-        'No internet connection. Try again when you are online.',
-      );
+      throw NetworkException(l10n.errorNoConnection);
     }
 
     if (error.type == DioExceptionType.cancel) {
-      throw NetworkException('The request was cancelled.');
+      throw NetworkException(l10n.errorRequestCancelled);
     }
 
     final response = error.response;
@@ -32,15 +28,16 @@ class DioErrorMapper {
       final apiMessage = _messageFromBody(data);
       final message =
           apiMessage ??
-          'The service is temporarily unavailable'
-              '${status != null ? ' (code $status)' : ''}. Please try again.';
+          (status != null
+              ? l10n.errorServiceUnavailableWithCode(status)
+              : l10n.errorServiceUnavailable);
       throw ServerException(message);
     }
 
     final fallback = error.message?.trim();
     throw ServerException(
       (fallback == null || fallback.isEmpty)
-          ? 'Something went wrong. Please try again.'
+          ? l10n.errorSomethingWentWrong
           : fallback,
     );
   }

@@ -1,0 +1,131 @@
+{
+  "@@locale": "en",
+  "appTitle": "NeuroGen",
+  "navGenerate": "Generate",
+  "navHistory": "History",
+  "generationQueuedSnack": "Generation queued. Open History to watch progress in real time.",
+  "settingsTooltip": "Settings",
+  "activeGenerationsBanner": "{count, plural, =1{1 active generation — you can keep using the app.} other{{count} active generations — you can keep using the app.}}",
+  "@activeGenerationsBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addPhoto": "Add a photo",
+  "replacePhoto": "Replace photo",
+  "uploadedReference": "Uploaded reference",
+  "clearSelectedImageTooltip": "Clear selected image",
+  "promptTipsTitle": "Prompt tips",
+  "promptTipsParagraph1": "Describe subject, lighting, style, and composition. Mention colors or mood when it matters.",
+  "promptTipsParagraph2": "Avoid only vague words; add concrete visual details.",
+  "promptHint": "Describe the image you want to generate",
+  "promptTipsTooltip": "Prompt tips",
+  "generate": "Generate",
+  "unableToLoadGeneratedImage": "Unable to load generated image.",
+  "historyEmpty": "No generations yet. Start one from the Generate tab — jobs update here in real time.",
+  "hideResultsTooltip": "Hide results",
+  "showResultsTooltip": "Show results",
+  "referenceImageTooltip": "Reference image used for this prompt",
+  "historyNoReferenceThumbnailTooltip": "No reference image for this prompt",
+  "generationRunsCount": "{count, plural, =1{1 generation} other{{count} generations}}",
+  "@generationRunsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "latestStatusAt": "Latest: {status} · {time}",
+  "@latestStatusAt": {
+    "placeholders": {
+      "status": {},
+      "time": {}
+    }
+  },
+  "statusPending": "Pending",
+  "statusProcessing": "Processing",
+  "statusDone": "Done",
+  "statusFailed": "Failed",
+  "editInGenerateTooltip": "Edit in Generate",
+  "retry": "Retry",
+  "retryWithRemaining": "Retry ({remaining} left)",
+  "@retryWithRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "noResultImagesOnJob": "No result images on this job.",
+  "shareMockMessage": "Share (mock): image queued for export.\n{url}",
+  "@shareMockMessage": {
+    "placeholders": {
+      "url": {}
+    }
+  },
+  "saved": "Saved",
+  "saveToGallery": "Save to gallery",
+  "unmarkSaved": "Unmark saved",
+  "shareEllipsis": "Share…",
+  "delete": "Delete",
+  "historyDeleteSectionTooltip": "Delete this prompt section from history",
+  "historyDeleteSectionTitle": "Delete this section?",
+  "historyDeleteSectionMessage": "{count, plural, =1{This removes 1 generation for this prompt from history. This cannot be undone.} other{This removes {count} generations for this prompt from history. This cannot be undone.}}",
+  "@historyDeleteSectionMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogCancel": "Cancel",
+  "snackMarkedNotSaved": "Marked as not saved (image stays in your gallery).",
+  "snackImageAddedToGallery": "Image added to your gallery (Photos).",
+  "settingsTitle": "Settings",
+  "settingsLanguageSection": "Language",
+  "settingsLanguageDescription": "Use the device default or pick English or Russian.",
+  "settingsLanguageSystem": "System default",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageRussian": "Russian",
+  "settingsAiProviderMock": "AI provider (mock)",
+  "settingsAiProviderMockDescription": "Only Kling is implemented. Other names are placeholders for future providers.",
+  "providerSubtitleActiveKling": "Active — all generations use Kling.",
+  "providerSubtitleMock": "Mock — not connected.",
+  "aboutSection": "About",
+  "brandNeurogen": "NeuroGen",
+  "brandAiBadge": "AI",
+  "brandPro": " Pro",
+  "errorRequestTimeout": "The request took too long. Check your connection and try again.",
+  "errorNoConnection": "No internet connection. Try again when you are online.",
+  "errorRequestCancelled": "The request was cancelled.",
+  "errorServiceUnavailableWithCode": "The service is temporarily unavailable (code {code}). Please try again.",
+  "@errorServiceUnavailableWithCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "errorServiceUnavailable": "The service is temporarily unavailable. Please try again.",
+  "errorSomethingWentWrong": "Something went wrong. Please try again.",
+  "errorGenerationNotFound": "Generation not found.",
+  "errorImageNotFound": "Image not found.",
+  "errorProviderNotAvailable": "{name} is not available for image generation.",
+  "@errorProviderNotAvailable": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "errorNoTaskIdFromProvider": "No task id returned from provider.",
+  "errorNoImagesReturned": "No images returned.",
+  "errorGenerationFailed": "Generation failed.",
+  "errorEmptyResponseFromApi": "Empty response from API.",
+  "errorUnexpectedApiMissingData": "Unexpected API response: missing data object.",
+  "errorUnexpectedNoImageOrTask": "Unexpected API response: no image URL or task.",
+  "errorImageGenerationFailed": "Image generation failed.",
+  "errorCompletedWithoutUrls": "Completed without image URLs.",
+  "errorKlingApiReturned": "Kling API returned an error.",
+  "errorSelectedImageFileNotFound": "Selected image file was not found."
+}

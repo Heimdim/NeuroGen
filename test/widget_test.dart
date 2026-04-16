@@ -1,17 +1,28 @@
+import 'dart:io';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive/hive.dart';
 
 import 'package:neurogen/core/config/kling_api_config.dart';
 import 'package:neurogen/core/config/kling_api_secrets.dart';
 import 'package:neurogen/core/di/service_locator.dart';
 import 'package:neurogen/main.dart';
+import 'package:neurogen/presentation/jobs/cubit/jobs_cubit.dart';
 
 void main() {
-  final sl = GetIt.instance;
+  late Directory tempDir;
+  late Box<String> jobBox;
 
   setUp(() async {
-    await sl.reset();
+    TestWidgetsFlutterBinding.ensureInitialized();
+    tempDir = await Directory.systemTemp.createTemp('neurogen_widget_test');
+    Hive.init(tempDir.path);
+    jobBox = await Hive.openBox<String>('neurogen_job_history_test');
+    await GetIt.instance.reset();
     setupServiceLocator(
+      jobHistoryBox: jobBox,
       klingApiConfig: KlingApiConfig(
         baseUrl: 'https://example.com',
         secrets: KlingApiSecrets.bearerForTests('test-token'),
@@ -20,16 +31,32 @@ void main() {
   });
 
   tearDown(() async {
-    await sl.reset();
+    final GetIt getIt = GetIt.instance;
+    if (getIt.isRegistered<JobsCubit>()) {
+      final JobsCubit cubit = getIt<JobsCubit>();
+      if (!cubit.isClosed) {
+        await cubit.close();
+      }
+    }
+    await getIt.reset();
+    await jobBox.close();
+    await tempDir.delete(recursive: true);
   });
 
-  testWidgets('Generation screen renders basic UI', (
+  testWidgets('App shell shows History and Generate navigation', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const NeuroGenApp());
+    final JobsCubit jobsCubit = getIt<JobsCubit>();
+    await tester.pumpWidget(
+      BlocProvider<JobsCubit>.value(
+        value: jobsCubit,
+        child: const NeuroGenApp(),
+      ),
+    );
 
-    expect(find.text('AI Image Generation'), findsOneWidget);
-    expect(find.text('Generate Image'), findsOneWidget);
-    expect(find.text('Select Image from Gallery'), findsOneWidget);
+    expect(find.text('NeuroGen'), findsWidgets);
+    expect(find.text('Generate'), findsWidgets);
+
+    await jobsCubit.close();
   });
 }

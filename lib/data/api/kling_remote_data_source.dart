@@ -7,11 +7,18 @@ import '../../core/config/kling_api_config.dart';
 import '../../core/error/exceptions.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/network/dio_error_mapper.dart';
+import '../../domain/entities/job_status.dart';
+import '../../l10n/locale_bridge.dart';
+import '../dto/generation_poll_result.dart';
 import '../dto/generation_request_dto.dart';
-import '../dto/generation_response_dto.dart';
+import '../dto/generation_submit_result.dart';
 
 abstract class KlingRemoteDataSource {
-  Future<GenerationResponseDto> generateImage(GenerationRequestDto request);
+  Future<GenerationSubmitResult> submitImageGeneration(
+    GenerationRequestDto request,
+  );
+
+  Future<GenerationPollResult> pollImageGeneration(String taskId);
 }
 
 class KlingRemoteDataSourceImpl implements KlingRemoteDataSource {
@@ -21,13 +28,12 @@ class KlingRemoteDataSourceImpl implements KlingRemoteDataSource {
   final KlingApiConfig _config;
 
   static const String _generationsPath = '/v1/images/generations';
-  static const Duration _pollInterval = Duration(seconds: 2);
-  static const int _maxPollAttempts = 90;
 
   @override
-  Future<GenerationResponseDto> generateImage(
+  Future<GenerationSubmitResult> submitImageGeneration(
     GenerationRequestDto request,
   ) async {
+    final l10n = resolveAppLocalizationsFromPlatform();
     try {
       final imageField = await _imageFieldForJson(request.imagePath);
       final payload = <String, dynamic>{
@@ -35,7 +41,7 @@ class KlingRemoteDataSourceImpl implements KlingRemoteDataSource {
         'prompt': request.prompt,
         'negative_prompt': '',
         'image': imageField,
-        'n': 2,
+        'n': 1,
         'external_task_id': '',
         'callback_url': '',
       };
@@ -47,52 +53,44 @@ class KlingRemoteDataSourceImpl implements KlingRemoteDataSource {
 
       final data = response.data;
       if (data == null) {
-        throw ServerException('Empty response from API.');
+        throw ServerException(l10n.errorEmptyResponseFromApi);
       }
 
       _ensureSuccessEnvelope(data);
 
       final inner = data['data'];
       if (inner is! Map) {
-        throw ServerException('Unexpected API response: missing data object.');
+        throw ServerException(l10n.errorUnexpectedApiMissingData);
       }
       final node = Map<String, dynamic>.from(inner);
 
-      final immediate = _extractImageUrl(node);
-      if (immediate != null && immediate.isNotEmpty) {
-        return GenerationResponseDto(
-          imageUrl: immediate,
-          prompt: request.prompt,
-        );
+      final urls = _extractAllImageUrls(node);
+      if (urls.isNotEmpty) {
+        return GenerationSubmitResult(imageUrls: urls);
       }
 
       final taskId = node['task_id']?.toString();
       if (taskId == null || taskId.isEmpty) {
-        throw ServerException('Unexpected API response: no image URL or task.');
+        throw ServerException(l10n.errorUnexpectedNoImageOrTask);
       }
 
-      return _pollUntilImageReady(taskId: taskId, prompt: request.prompt);
+      return GenerationSubmitResult(taskId: taskId);
     } on DioException catch (error) {
-      DioErrorMapper.throwMapped(error);
+      DioErrorMapper.throwMapped(error, l10n);
     }
   }
 
-  Future<GenerationResponseDto> _pollUntilImageReady({
-    required String taskId,
-    required String prompt,
-  }) async {
-    for (var i = 0; i < _maxPollAttempts; i++) {
-      if (i > 0) {
-        await Future<void>.delayed(_pollInterval);
-      }
-
+  @override
+  Future<GenerationPollResult> pollImageGeneration(String taskId) async {
+    final l10n = resolveAppLocalizationsFromPlatform();
+    try {
       final response = await _dioClient.dio.get<Map<String, dynamic>>(
         '$_generationsPath/$taskId',
       );
 
       final root = response.data;
       if (root == null) {
-        continue;
+        return const GenerationPollResult(status: JobStatus.processing);
       }
 
       _ensureSuccessEnvelope(root);
@@ -102,22 +100,35 @@ class KlingRemoteDataSourceImpl implements KlingRemoteDataSource {
           ? Map<String, dynamic>.from(inner)
           : root;
 
-      final url = _extractImageUrl(node);
-      if (url != null && url.isNotEmpty) {
-        return GenerationResponseDto(imageUrl: url, prompt: prompt);
+      final urls = _extractAllImageUrls(node);
+      if (urls.isNotEmpty) {
+        return GenerationPollResult(
+          status: JobStatus.completed,
+          imageUrls: urls,
+        );
       }
 
-      final status = node['task_status']?.toString().toLowerCase();
-      if (status == 'failed' || status == 'error') {
+      final statusRaw = node['task_status']?.toString().toLowerCase() ?? '';
+      if (statusRaw == 'failed' || statusRaw == 'error') {
         final msg =
             node['task_status_msg']?.toString() ??
             node['message']?.toString() ??
-            'Image generation failed.';
-        throw ServerException(msg);
+            l10n.errorImageGenerationFailed;
+        return GenerationPollResult(status: JobStatus.failed, message: msg);
       }
+      if (statusRaw == 'succeed' ||
+          statusRaw == 'success' ||
+          statusRaw == 'completed') {
+        return GenerationPollResult(
+          status: JobStatus.completed,
+          imageUrls: urls,
+          message: urls.isEmpty ? l10n.errorCompletedWithoutUrls : null,
+        );
+      }
+      return const GenerationPollResult(status: JobStatus.processing);
+    } on DioException catch (error) {
+      DioErrorMapper.throwMapped(error, l10n);
     }
-
-    throw ServerException('Image generation timed out.');
   }
 
   void _ensureSuccessEnvelope(Map<String, dynamic> json) {
@@ -128,7 +139,9 @@ class KlingRemoteDataSourceImpl implements KlingRemoteDataSource {
     final ok =
         (code is num && code.toInt() == 0) || (code is String && code == '0');
     if (!ok) {
-      final msg = json['message']?.toString() ?? 'Kling API returned an error.';
+      final msg =
+          json['message']?.toString() ??
+          resolveAppLocalizationsFromPlatform().errorKlingApiReturned;
       throw ServerException(msg);
     }
   }
@@ -145,37 +158,41 @@ class KlingRemoteDataSourceImpl implements KlingRemoteDataSource {
 
     final file = File(path);
     if (!await file.exists()) {
-      throw ServerException('Selected image file was not found.');
+      throw ServerException(
+        resolveAppLocalizationsFromPlatform().errorSelectedImageFileNotFound,
+      );
     }
 
     final bytes = await file.readAsBytes();
     return base64Encode(bytes);
   }
 
-  static String? _extractImageUrl(Map<String, dynamic> node) {
+  static List<String> _extractAllImageUrls(Map<String, dynamic> node) {
+    final out = <String>[];
     final direct = node['image_url'] as String?;
     if (direct != null && direct.isNotEmpty) {
-      return direct;
+      out.add(direct);
     }
 
     final tr = node['task_result'];
     if (tr is! Map) {
-      return null;
+      return out;
     }
     final trMap = Map<String, dynamic>.from(tr);
     final images = trMap['images'];
     if (images is! List || images.isEmpty) {
-      return null;
+      return out;
     }
-    final first = images.first;
-    if (first is! Map) {
-      return null;
+    for (final item in images) {
+      if (item is! Map) {
+        continue;
+      }
+      final m = Map<String, dynamic>.from(item);
+      final u = m['url'] as String? ?? m['image_url'] as String?;
+      if (u != null && u.isNotEmpty) {
+        out.add(u);
+      }
     }
-    final m = Map<String, dynamic>.from(first);
-    final u = m['url'] as String? ?? m['image_url'] as String?;
-    if (u != null && u.isNotEmpty) {
-      return u;
-    }
-    return null;
+    return out;
   }
 }

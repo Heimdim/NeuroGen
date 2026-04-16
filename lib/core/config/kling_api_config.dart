@@ -2,7 +2,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'kling_api_secrets.dart';
 
-/// Base URL and auth for the Kling HTTP client.
 class KlingApiConfig {
   KlingApiConfig({
     required this.baseUrl,
@@ -13,7 +12,6 @@ class KlingApiConfig {
   final String baseUrl;
   final KlingApiSecrets secrets;
 
-  /// `model_name` for `POST /v1/images/generations`.
   final String imageModelName;
 
   static const String _defaultBaseUrl = 'https://api.kling.ai';

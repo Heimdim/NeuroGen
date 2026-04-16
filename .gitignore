@@ -46,4 +46,7 @@ app.*.map.json
 
 *instructions.txt
 
+# Internal project brief (not for distribution)
+project_description_neurogen.md
+
 .env

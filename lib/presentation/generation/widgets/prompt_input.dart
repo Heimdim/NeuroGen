@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 class PromptInput extends StatefulWidget {
   const PromptInput({
     super.key,
@@ -50,6 +52,7 @@ class _PromptInputState extends State<PromptInput> {
   int get _length => widget.controller.text.characters.length;
 
   void _showPromptTips(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -61,20 +64,19 @@ class _PromptInputState extends State<PromptInput> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Prompt tips',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                l10n.promptTipsTitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
-                'Describe subject, lighting, style, and composition. '
-                'Mention colors or mood when it matters.',
+                l10n.promptTipsParagraph1,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 12),
               Text(
-                'Avoid only vague words; add concrete visual details.',
+                l10n.promptTipsParagraph2,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
@@ -86,6 +88,7 @@ class _PromptInputState extends State<PromptInput> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     final TextTheme textTheme = Theme.of(context).textTheme;
     final bool hasText = _length > 0;
 
@@ -109,9 +112,9 @@ class _PromptInputState extends State<PromptInput> {
                 color: const Color(0xFF424242),
                 height: 1.35,
               ),
-              decoration: const InputDecoration(
-                hintText: 'Describe the image you want to generate',
-                hintStyle: TextStyle(
+              decoration: InputDecoration(
+                hintText: l10n.promptHint,
+                hintStyle: const TextStyle(
                   color: Color(0xFF9E9E9E),
                   fontWeight: FontWeight.w400,
                 ),
@@ -122,7 +125,7 @@ class _PromptInputState extends State<PromptInput> {
                 errorBorder: InputBorder.none,
                 focusedErrorBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: EdgeInsets.fromLTRB(16, 14, 16, 44),
+                contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 44),
               ),
             ),
             Positioned(
@@ -144,11 +147,14 @@ class _PromptInputState extends State<PromptInput> {
                 children: [
                   IconButton(
                     onPressed: widget.enabled
-                        ? () => _showPromptTips(context)
+                        ? () {
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            _showPromptTips(context);
+                          }
                         : null,
                     icon: const Icon(Icons.lightbulb_outline),
                     color: const Color(0xFF757575),
-                    tooltip: 'Prompt tips',
+                    tooltip: l10n.promptTipsTooltip,
                     visualDensity: VisualDensity.compact,
                   ),
                   if (hasText)
@@ -159,6 +165,7 @@ class _PromptInputState extends State<PromptInput> {
                       child: InkWell(
                         onTap: widget.enabled
                             ? () {
+                                FocusManager.instance.primaryFocus?.unfocus();
                                 widget.controller.clear();
                                 widget.onChanged?.call('');
                               }

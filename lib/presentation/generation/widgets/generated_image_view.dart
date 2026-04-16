@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 class GeneratedImageView extends StatelessWidget {
   const GeneratedImageView({super.key, required this.imageUrl});
 
@@ -8,6 +10,7 @@ class GeneratedImageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
     if (imageUrl.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -25,10 +28,10 @@ class GeneratedImageView extends StatelessWidget {
             child: CircularProgressIndicator(),
           ),
         ),
-        errorWidget: (context, url, error) => const Center(
+        errorWidget: (context, url, error) => Center(
           child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('Unable to load generated image.'),
+            padding: const EdgeInsets.all(16),
+            child: Text(l10n.unableToLoadGeneratedImage),
           ),
         ),
       ),

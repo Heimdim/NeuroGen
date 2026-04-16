@@ -30,7 +30,6 @@ String _jwtSegment(Map<String, dynamic> claims) =>
 String _jwtSegmentBytes(List<int> bytes) =>
     base64Url.encode(bytes).replaceAll('=', '');
 
-
 class KlingApiSecrets {
   KlingApiSecrets._(this._authorizationHeader, {_KlingJwtTokenCache? jwtCache})
     : _jwtCache = jwtCache;
@@ -38,10 +37,8 @@ class KlingApiSecrets {
   final String Function() _authorizationHeader;
   final _KlingJwtTokenCache? _jwtCache;
 
-  /// `Authorization` header value, including the `Bearer` prefix.
   String authorizationHeaderValue() => _authorizationHeader();
 
-  /// Clears the cached JWT so the next call mints a new token.
   void invalidateKlingJwtCache() => _jwtCache?.invalidate();
 
   factory KlingApiSecrets.fromLoadedEnv() {
