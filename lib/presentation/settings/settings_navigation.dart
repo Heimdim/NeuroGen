@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'screen/settings_screen.dart';
+import 'package:go_router/go_router.dart';
 
 Future<void> pushSettingsScreen(BuildContext context) {
-  return Navigator.of(
-    context,
-  ).push<void>(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
+  return context.push<void>('/settings');
 }

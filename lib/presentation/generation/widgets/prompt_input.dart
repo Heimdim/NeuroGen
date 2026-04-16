@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 
 class PromptInput extends StatefulWidget {
@@ -22,9 +23,6 @@ class PromptInput extends StatefulWidget {
 }
 
 class _PromptInputState extends State<PromptInput> {
-  static const Color _fieldFill = Color(0xFFF2F2F7);
-  static const Color _counterColor = Color(0xFF8FA3B0);
-
   late final VoidCallback _controllerListener;
 
   @override
@@ -89,13 +87,14 @@ class _PromptInputState extends State<PromptInput> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
+    final AppThemeColors appColors = context.appColors;
     final TextTheme textTheme = Theme.of(context).textTheme;
     final bool hasText = _length > 0;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: ColoredBox(
-        color: _fieldFill,
+        color: appColors.promptFieldFill,
         child: Stack(
           children: [
             TextField(
@@ -109,13 +108,13 @@ class _PromptInputState extends State<PromptInput> {
               ],
               onChanged: widget.onChanged,
               style: textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF424242),
+                color: appColors.promptInputText,
                 height: 1.35,
               ),
               decoration: InputDecoration(
                 hintText: l10n.promptHint,
-                hintStyle: const TextStyle(
-                  color: Color(0xFF9E9E9E),
+                hintStyle: TextStyle(
+                  color: appColors.promptHintText,
                   fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
@@ -134,7 +133,7 @@ class _PromptInputState extends State<PromptInput> {
               child: Text(
                 '$_length/${PromptInput.maxLength}',
                 style: textTheme.labelMedium?.copyWith(
-                  color: _counterColor,
+                  color: appColors.promptCounter,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -153,13 +152,13 @@ class _PromptInputState extends State<PromptInput> {
                           }
                         : null,
                     icon: const Icon(Icons.lightbulb_outline),
-                    color: const Color(0xFF757575),
+                    color: appColors.promptActionIcon,
                     tooltip: l10n.promptTipsTooltip,
                     visualDensity: VisualDensity.compact,
                   ),
                   if (hasText)
                     Material(
-                      color: Colors.black,
+                      color: appColors.promptClearBackground,
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
@@ -170,13 +169,13 @@ class _PromptInputState extends State<PromptInput> {
                                 widget.onChanged?.call('');
                               }
                             : null,
-                        child: const SizedBox(
+                        child: SizedBox(
                           width: 28,
                           height: 28,
                           child: Icon(
                             Icons.close,
                             size: 16,
-                            color: Colors.white,
+                            color: appColors.promptClearForeground,
                           ),
                         ),
                       ),

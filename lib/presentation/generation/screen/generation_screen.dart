@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../domain/ai/ai_provider_id.dart';
 import '../../../domain/entities/job_status.dart';
 import '../../../l10n/app_localizations.dart';
@@ -258,8 +259,9 @@ class _LavenderToolbarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppThemeColors appColors = context.appColors;
     return Material(
-      color: const Color(0xFFEDE7F5),
+      color: appColors.toolbarBackground,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onPressed,
@@ -269,17 +271,17 @@ class _LavenderToolbarButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Icon(icon, size: 20, color: const Color(0xFF5E35B1)),
+              Icon(icon, size: 20, color: appColors.toolbarIcon),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
-                    color: Color(0xFF424242),
+                    color: appColors.toolbarLabel,
                   ),
                 ),
               ),

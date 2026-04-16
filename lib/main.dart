@@ -5,9 +5,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/locale/app_locale_controller.dart';
+import 'core/theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/jobs/cubit/jobs_cubit.dart';
-import 'presentation/shell/app_shell.dart';
+import 'presentation/navigation/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,18 +35,17 @@ class NeuroGenApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: localeController,
       builder: (BuildContext context, Widget? child) {
-        return MaterialApp(
+        return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           locale: localeController.localeOverride,
           onGenerateTitle: (BuildContext context) =>
               AppLocalizations.of(context)!.appTitle,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-            useMaterial3: true,
-          ),
-          home: const AppShell(),
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: ThemeMode.system,
+          routerConfig: appRouter,
         );
       },
     );

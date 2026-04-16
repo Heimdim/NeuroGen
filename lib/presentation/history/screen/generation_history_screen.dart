@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../domain/ai/ai_provider_id.dart';
 import '../../../domain/entities/generation_job.dart';
 import '../../../l10n/app_localizations.dart';
@@ -119,7 +121,7 @@ class _PromptSectionState extends State<_PromptSection> {
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
+              onPressed: () => dialogContext.pop(false),
               child: Text(l10n.dialogCancel),
             ),
             FilledButton(
@@ -127,7 +129,7 @@ class _PromptSectionState extends State<_PromptSection> {
                 backgroundColor: scheme.error,
                 foregroundColor: scheme.onError,
               ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
+              onPressed: () => dialogContext.pop(true),
               child: Text(l10n.delete),
             ),
           ],
@@ -446,6 +448,7 @@ class _ResultTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context)!;
     final JobsCubit cubit = context.read<JobsCubit>();
+    final AppThemeColors appColors = context.appColors;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Stack(
@@ -484,7 +487,7 @@ class _ResultTile extends StatelessWidget {
               left: 6,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black54,
+                  color: appColors.mediaOverlay,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Padding(
@@ -495,12 +498,16 @@ class _ResultTile extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      const Icon(Icons.bookmark, color: Colors.white, size: 16),
+                      Icon(
+                        Icons.bookmark,
+                        color: appColors.mediaOverlayForeground,
+                        size: 16,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         l10n.saved,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: appColors.mediaOverlayForeground,
                           fontSize: 12,
                         ),
                       ),
@@ -512,14 +519,18 @@ class _ResultTile extends StatelessWidget {
           Material(
             color: Colors.transparent,
             child: PopupMenuButton<String>(
-              icon: const DecoratedBox(
+              icon: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black45,
+                  color: appColors.mediaMenuOverlay,
                   shape: BoxShape.circle,
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(6),
-                  child: Icon(Icons.more_horiz, color: Colors.white, size: 20),
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.more_horiz,
+                    color: appColors.mediaOverlayForeground,
+                    size: 20,
+                  ),
                 ),
               ),
               onSelected: (String value) async {
